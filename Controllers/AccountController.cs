@@ -16,8 +16,9 @@ public class AccountController : Controller
 
     public IActionResult Dashboard()
     {
-        // INSECURE: No proper authentication check
-        var customerId = HttpContext.Session.GetInt32("CustomerId");
+        // INSECURE
+        var customerId = GetCustomerIdFromCookie();
+        // var customerId = HttpContext.Session.GetInt32("CustomerId"); // Session-based identity
 
         if (customerId == null)
         {
@@ -45,7 +46,8 @@ public class AccountController : Controller
     public IActionResult Transfer(string toAccountNumber, decimal amount, string message)
     {
         // INSECURE: No CSRF protection, minimal validation
-        var customerId = HttpContext.Session.GetInt32("CustomerId");
+        var customerId = GetCustomerIdFromCookie();
+        // var customerId = HttpContext.Session.GetInt32("CustomerId"); // Session-based identity
 
         if (customerId == null)
         {
@@ -107,5 +109,16 @@ public class AccountController : Controller
 
         TempData["Success"] = "Transfer completed successfully";
         return RedirectToAction("Dashboard");
+    }
+
+    private int? GetCustomerIdFromCookie()
+    {
+        if (Request.Cookies.TryGetValue("CustomerId", out var rawValue)
+            && int.TryParse(rawValue, out var customerId))
+        {
+            return customerId;
+        }
+
+        return null;
     }
 }

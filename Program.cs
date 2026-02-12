@@ -9,12 +9,12 @@ builder.Services.AddDbContext<BankContext>(options =>
     options.UseSqlite("Data Source=bank.db"));
 
 // Add session support (insecure - no encryption, just basic storage)
-builder.Services.AddDistributedMemoryCache(); // In-memory cache for sessions
-builder.Services.AddSession(options =>
-{
-    options.Cookie.HttpOnly = false; // INSECURE!
-    options.Cookie.IsEssential = true;
-});
+// builder.Services.AddDistributedMemoryCache(); // In-memory cache for sessions
+// builder.Services.AddSession(options =>
+// {
+//     options.Cookie.HttpOnly = false; // INSECURE!
+//     options.Cookie.IsEssential = true;
+// });
 
 var app = builder.Build();
 
@@ -34,7 +34,7 @@ using (var scope = app.Services.CreateScope())
 // app.UseHttpsRedirection();
 
 app.UseRouting();
-app.UseSession();
+// app.UseSession(); // INSECURE: Session is not properly configured, and not used in controllers
 app.UseAuthorization();
 
 app.MapStaticAssets();

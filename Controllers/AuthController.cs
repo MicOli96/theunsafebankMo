@@ -29,9 +29,9 @@ public class AuthController : Controller
 
         if (customer != null)
         {
-            // Store in session (insecure)
-            HttpContext.Session.SetInt32("CustomerId", customer.Id);
-            HttpContext.Session.SetString("Username", customer.Username);
+            // INSECURE: Store identity in a plain cookie
+            Response.Cookies.Append("CustomerId", customer.Id.ToString());
+            // HttpContext.Session.SetInt32("CustomerId", customer.Id); // INSECURE: Session-based identity (commented)
             return RedirectToAction("Dashboard", "Account");
         }
 
@@ -82,16 +82,18 @@ public class AuthController : Controller
         _context.Accounts.Add(account);
         _context.SaveChanges();
 
-        // Auto-login after registration
-        HttpContext.Session.SetInt32("CustomerId", customer.Id);
-        HttpContext.Session.SetString("Username", customer.Username);
+        // Auto-login after registration (plain cookie - INSECURE)
+        Response.Cookies.Append("CustomerId", customer.Id.ToString());
+        // HttpContext.Session.SetInt32("CustomerId", customer.Id); // INSECURE: Session-based identity (commented)
 
         return RedirectToAction("Dashboard", "Account");
     }
 
     public IActionResult Logout()
     {
-        HttpContext.Session.Clear();
+        // Clear the plain cookie
+        Response.Cookies.Delete("CustomerId");
+        // HttpContext.Session.Clear(); // INSECURE: Session-based identity (commented)
         return RedirectToAction("Login");
     }
 }
