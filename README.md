@@ -33,7 +33,7 @@ Only basic session checks, easily bypassed
 -- and see all passwords in plain text
 SELECT Username, Password FROM Customers;
 
-### Fix
+### Patch
 
 -- Use a hashing algorithm like BCrypt to store passwords securely
 
@@ -75,7 +75,7 @@ Exploit:
 // Or redirect to phishing site:
 <script>window.location='http://evil-bank.com'</script>
 
-### Fix
+### Patch
 
 // In Dashboard.cshtml, change:
 <td>@Html.Raw(transfer.Message)</td>
@@ -116,7 +116,7 @@ Exploit:
 <!-- If logged-in user visits this page, money transfers automatically -->
  ```
 
-### Fix
+### Patch
 
 ```cs
 // 1. In Program.cs, add after builder.Services.AddControllersWithViews():
@@ -154,7 +154,7 @@ var query = $"SELECT * FROM Customers WHERE Username = '{username}' AND Password
 // Results in: SELECT * FROM Customers WHERE Username = 'admin' OR '1'='1' AND Password = ''
 // This bypasses authentication!
 
-### Fix
+### Patch
 
 // Always use parameterized queries or ORM features that handle this for you
 // With EF Core, you should be safe as long as you use LINQ or parameterized raw SQL.
@@ -180,7 +180,7 @@ Exploit:
 // 4. Attacker is now logged in as victim
 ```
 
-### Fix
+### Patch
 
 ```cs
 // In Program.cs, change session configuration:
@@ -202,7 +202,7 @@ Exploit:
 // An attacker on the same network can sniff traffic and steal credentials or session cookies
 // Example: Using Wireshark, attacker captures login request.
 
-### Fix
+### Patch
 
 ```cs
 // In Program.cs, uncomment/add:
@@ -212,7 +212,7 @@ app.UseHsts();
 // In launchSettings.json, ensure HTTPS URL is configured:
 "applicationUrl": "https://localhost:5001;http://localhost:5000"
 
-// Force HTTPS-only cookies (shown in fix #5 above)
+// Force HTTPS-only cookies (shown in Patch #5 above)
 ```
 
 ## 7. Race Conditions in Transfers
@@ -231,7 +231,7 @@ for (int i = 0; i < 10; i++)
 // Attacker can spend more money than they have!
 ```
 
-### Fix
+### Patch
 
 ```cs
 // In AccountController.Transfer, wrap in transaction:
@@ -282,7 +282,7 @@ Amount: -5000  (negative numbers might work)
 Amount: 999999999999999999 (integer overflow)
 Message: '; DROP TABLE Customers; --
 
-### Fix
+### Patch
 
 ```cs
 // In AuthController.Register:
@@ -336,7 +336,7 @@ curl -X POST http://localhost:5000/Account/Transfer \
   -d "toAccountNumber=1000003&amount=1000&message=stolen"
 ```
 
-### Fix
+### Patch
 
 ```cs
 // Implement proper authorization checks:
@@ -395,7 +395,7 @@ public class AccountController : Controller
 // Attackers can use this information to target specific accounts or users.
 ```
 
-### Fix
+### Patch
 
 ```cs
 // Generic error messages:
@@ -430,4 +430,4 @@ Demonstrate XSS first - It's visually impressive with alert boxes
 Show CSRF - Create the malicious HTML page and test it
 Database inspection - Open bank.db in DB Browser for SQLite to show plain text passwords
 Network sniffing - Use browser dev tools Network tab to show unencrypted data
-Fix incrementally - Have students fix one vulnerability at a time and test
+Patch incrementally - Have students Patch one vulnerability at a time and test

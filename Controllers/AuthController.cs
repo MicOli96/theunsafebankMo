@@ -23,13 +23,13 @@ public class AuthController : Controller
     [HttpPost]
     public IActionResult Login(string username, string password)
     {
-        // INSECURE: SQL Injection vulnerable, plain text password comparison
+        // FIXME: SQL Injection vulnerable, plain text password comparison. Fix with hashed passwords.
         var customer = _context.Customers
             .FirstOrDefault(c => c.Username == username && c.Password == password);
 
         if (customer != null)
         {
-            // INSECURE: Store identity in a plain cookie
+            // FIXME: Store identity in a plain cookie
             Response.Cookies.Append("CustomerId", customer.Id.ToString());
             // HttpContext.Session.SetInt32("CustomerId", customer.Id); // Session-based identity
             return RedirectToAction("Dashboard", "Account");
@@ -48,7 +48,7 @@ public class AuthController : Controller
     [HttpPost]
     public IActionResult Register(string username, string password, string fullName)
     {
-        // INSECURE: No validation, no password hashing
+        // FIXME: No validation, no password hashing
         var existingCustomer = _context.Customers.FirstOrDefault(c => c.Username == username);
 
         if (existingCustomer != null)
@@ -61,7 +61,7 @@ public class AuthController : Controller
         var customer = new Customer
         {
             Username = username,
-            Password = password, // INSECURE: Plain text!
+            Password = password, // FIXME: Plain text! Use Bcrypt to hash passwords in a real application
             FullName = fullName
         };
 
@@ -90,7 +90,7 @@ public class AuthController : Controller
 
         // Auto-login after registration (plain cookie - INSECURE)
         Response.Cookies.Append("CustomerId", customer.Id.ToString());
-        // HttpContext.Session.SetInt32("CustomerId", customer.Id); // INSECURE: Session-based identity (commented)
+        // HttpContext.Session.SetInt32("CustomerId", customer.Id); // FIXME: Session-based identity (commented)
 
         return RedirectToAction("Dashboard", "Account");
     }
@@ -99,7 +99,7 @@ public class AuthController : Controller
     {
         // Clear the plain cookie
         Response.Cookies.Delete("CustomerId");
-        // HttpContext.Session.Clear(); // INSECURE: Session-based identity (commented)
+        // HttpContext.Session.Clear(); // FIXME: Session-based identity (commented)
         return RedirectToAction("Login");
     }
 }
