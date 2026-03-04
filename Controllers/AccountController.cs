@@ -117,29 +117,34 @@ public class AccountController : Controller
     [HttpGet]
     public IActionResult ExportData()
     {
-        // Show export form - requires username/password for "performative safety"
         return View();
     }
 
     [HttpPost]
     public IActionResult ExportData(string username, string password)
     {
+        string testInput = username + password;
+        if (testInput.Contains("DROP", StringComparison.OrdinalIgnoreCase))
+        {
+            ViewBag.Error = "Jag sa ju INGA DROP-kommandon!";
+            return View();
+        }
+
         // VULNERABLE: CRITICAL SQL INJECTION!
         // User-supplied input directly interpolated into SQL query
-        // Example attack: username = admin' UNION SELECT Id, Username, Password, FullName FROM Customers WHERE '1'='1--
-        try
+        // Example attack: username = ' OR 1=1 -- 
+
+        var exportData = new { customers = new List<dynamic>(), accounts = new List<dynamic>() };
+
+        // Execute raw SQL and extract customer data
+        using (var connection = _context.Database.GetDbConnection())
         {
-            var exportData = new { customers = new List<dynamic>(), accounts = new List<dynamic>() };
+            connection.Open();
 
-            // Execute raw SQL and extract customer data
-            using (var connection = _context.Database.GetDbConnection())
-            {
-                connection.Open();
+            // For demo: query without aliases to avoid column issues
+            var passwordWhere = $"AND Password = '{password}'";
 
-                // For demo: query without aliases to avoid column issues
-                var passwordWhere = $"AND Password = '{password}'";
-
-                var sql = $@"
+            var sql = $@"
                     SELECT 
                         Id, 
                         Username, 
@@ -149,35 +154,34 @@ public class AccountController : Controller
                     WHERE Username = '{username}' {passwordWhere}
                 ";
 
-                using (var command = connection.CreateCommand())
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                using (var reader = command.ExecuteReader())
                 {
-                    command.CommandText = sql;
-                    using (var reader = command.ExecuteReader())
+                    var customerList = new List<dynamic>();
+                    while (reader.Read())
                     {
-                        var customerList = new List<dynamic>();
-                        while (reader.Read())
+                        customerList.Add(new
                         {
-                            customerList.Add(new
-                            {
-                                Id = reader["Id"],
-                                Username = reader["Username"],
-                                Password = reader["Password"],
-                                FullName = reader["FullName"]
-                            });
-                        }
-
-                        if (!customerList.Any())
-                        {
-                            ViewBag.Error = "Invalid username or password";
-                            return View();
-                        }
-
-                        exportData = new { customers = customerList, accounts = new List<dynamic>() };
+                            Id = reader["Id"],
+                            Username = reader["Username"],
+                            Password = reader["Password"],
+                            FullName = reader["FullName"]
+                        });
                     }
-                }
 
-                // Also grab account data with vulnerable query
-                var accountSql = $@"
+                    if (!customerList.Any())
+                    {
+                        ViewBag.Error = "Invalid username or password";
+                        return View();
+                    }
+
+                    exportData = new { customers = customerList, accounts = new List<dynamic>() };
+                }
+            }
+
+            var accountSql = $@"
                     SELECT * FROM Accounts
                     WHERE CustomerId IN (
                         SELECT Id FROM Customers 
@@ -185,36 +189,32 @@ public class AccountController : Controller
                     )
                 ";
 
-                using (var command = connection.CreateCommand())
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = accountSql;
+                using (var reader = command.ExecuteReader())
                 {
-                    command.CommandText = accountSql;
-                    using (var reader = command.ExecuteReader())
+                    var accountList = new List<dynamic>();
+                    while (reader.Read())
                     {
-                        var accountList = new List<dynamic>();
-                        while (reader.Read())
+                        accountList.Add(new
                         {
-                            accountList.Add(new
-                            {
-                                Id = reader["Id"],
-                                AccountNumber = reader["AccountNumber"],
-                                Balance = reader["Balance"],
-                                CustomerId = reader["CustomerId"]
-                            });
-                        }
-                        exportData = new { exportData.customers, accounts = accountList };
+                            Id = reader["Id"],
+                            AccountNumber = reader["AccountNumber"],
+                            Balance = reader["Balance"],
+                            CustomerId = reader["CustomerId"]
+                        });
                     }
+                    exportData = new { exportData.customers, accounts = accountList };
                 }
             }
+        }
 
-            // Return as JSON download
-            var json = System.Text.Json.JsonSerializer.Serialize(exportData, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-            return File(System.Text.Encoding.UTF8.GetBytes(json), "application/json", $"bank_export_{DateTime.Now:yyyyMMdd_HHmmss}.json");
-        }
-        catch (Exception ex)
-        {
-            ViewBag.Error = $"Export failed: {ex.Message}";
-            return View();
-        }
+        // Returnera json som filnedladdning
+        var json = System.Text.Json.JsonSerializer.Serialize(exportData, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        return File(System.Text.Encoding.UTF8.GetBytes(json), "application/json", $"bank_export_{DateTime.Now:yyyyMMdd_HHmmss}.json");
+
+
     }
 
     private int? GetCustomerIdFromCookie()
