@@ -118,7 +118,7 @@ t.ReceiverMessage
                 <td style="color: @(transfer.Amount > 0 ? "green" : "red")">
                     @transfer.Amount.ToString("N2") SEK
                 </td>
-                <td>@Html.Raw(transfer.Message)</td>
+                <td>@transfer.Message</td>
             </tr>
         }
     </table>
