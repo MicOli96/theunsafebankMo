@@ -40,7 +40,7 @@ public class BankContext : DbContext
             Id = 1,
             FullName = "Admin",
             Username = "admin",
-            PasswordHased = BCrypt.Net.BCrypt.HashPassword("admin") // FIXME: Plain text password! Use Bcrypt to hash passwords in a real application
+            PasswordHashed = BCrypt.Net.BCrypt.HashPassword("admin") // FIXME: Plain text password! Use Bcrypt to hash passwords in a real application
         };
 
         var theBanksAccount = new Account
@@ -56,7 +56,7 @@ public class BankContext : DbContext
             Id = 2,
             FullName = "gustav",
             Username = "gus",
-            PasswordHased = BCrypt.Net.BCrypt.HashPassword("gus")
+            PasswordHashed = BCrypt.Net.BCrypt.HashPassword("gus")
         };
 
         var firstCustomerAccount = new Account
@@ -72,7 +72,7 @@ public class BankContext : DbContext
             Id = 3,
             FullName = "kråkan",
             Username = "kråkan",
-            PasswordHased = BCrypt.Net.BCrypt.HashPassword("kråkan")
+            PasswordHashed = BCrypt.Net.BCrypt.HashPassword("kråkan")
         };
 
         var secondCustomerAccount = new Account
